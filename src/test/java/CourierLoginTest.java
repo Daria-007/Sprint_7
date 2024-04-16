@@ -2,31 +2,20 @@ import client.Courier;
 import client.Credentials;
 import client.ScooterServiceClient;
 import client.ScooterServiceClientImpl;
-import io.qameta.allure.internal.shadowed.jackson.annotation.JsonInclude;
-import io.restassured.builder.RequestSpecBuilder;
-import io.restassured.builder.ResponseSpecBuilder;
-import io.restassured.filter.log.LogDetail;
+import io.qameta.allure.Step;
 import io.restassured.response.ValidatableResponse;
-import io.restassured.specification.RequestSpecification;
-import io.restassured.specification.ResponseSpecification;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import com.github.javafaker.Faker;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.isEmptyString;
 
-public class CourierLoginTest {
-    private static final RequestSpecification REQUEST_SPECIFICATION =
-            new RequestSpecBuilder()
-                    .log(LogDetail.ALL)
-                    .addHeader("Content-type", "application/json")
-                    .setBaseUri("http://qa-scooter.praktikum-services.ru/")
-                    .build();
-    private static final ResponseSpecification RESPONSE_SPECIFICATION =
-            new ResponseSpecBuilder().log(LogDetail.ALL).build();
+public class CourierLoginTest extends BaseTest  {
     private ScooterServiceClient client;
     private String createdCourierId;
+    private final Faker faker = new Faker();
 
     @Before
     public void setUp() {
@@ -39,9 +28,11 @@ public class CourierLoginTest {
             client.deleteCourierById(createdCourierId);
         }
     }
+
+    @Step("Login courier successfully")
     @Test
-    public void loginCourier_success() {
-        Courier courier = Courier.create("yruuifrfr", "1234", "Dasha");
+    public void loginCourierSuccess() {
+        Courier courier = Courier.create(faker.name().username(), "1234", faker.name().fullName());
         client.createCourier(courier);
         Credentials credentials = Credentials.fromCourier(courier);
         ValidatableResponse response = client.login(credentials);
@@ -51,23 +42,26 @@ public class CourierLoginTest {
         assertThat(courierId, not(isEmptyString()));
     }
 
+    @Step("Login courier with incorrect credentials")
     @Test
-    public void loginCourier_incorrectCredentials_returnsError() {
-        Credentials credentials = new Credentials("incorrect_login", "incorrect_password");
+    public void loginCourierIncorrectCredentialsReturnsError() {
+        Credentials credentials = new Credentials(faker.name().username(), faker.internet().password());
         ValidatableResponse response = client.login(credentials);
         response.assertThat().statusCode(404);
     }
 
+    @Step("Login courier with missing fields")
     @Test
-    public void loginCourier_missingFields_returnsError() {
-        Credentials credentials = new Credentials("yruuifrfr", "");
+    public void loginCourierMissingFieldsReturnsError() {
+        Credentials credentials = new Credentials(faker.name().username(), "");
         ValidatableResponse response = client.login(credentials);
         response.assertThat().statusCode(400);
     }
 
+    @Step("Login non-existing courier")
     @Test
-    public void loginCourier_nonExistingCourier_returnsError() {
-        Credentials credentials = new Credentials("non_existing_login", "1234");
+    public void loginCourierNonExistingCourierReturnsError() {
+        Credentials credentials = new Credentials(faker.name().username(), "1234");
         ValidatableResponse response = client.login(credentials);
         response.assertThat().statusCode(404);
     }

@@ -1,5 +1,6 @@
 package client;
 
+import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.RequestSpecification;
@@ -60,10 +61,13 @@ public class ScooterServiceClientImpl implements ScooterServiceClient {
                 .spec(responseSpecification);
     }
     @Override
-    public Response getOrders() {
-        return given()
+    public Response getListOfOrders() {
+        return RestAssured.given()
                 .spec(requestSpecification)
-                .get(GET_ORDERS_ENDPOINT)
-                .andReturn();
+                .get("/api/v1/orders")
+                .then()
+                .spec(responseSpecification)
+                .extract()
+                .response();
     }
 }

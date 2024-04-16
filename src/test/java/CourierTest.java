@@ -1,27 +1,16 @@
 import client.Courier;
 import client.ScooterServiceClient;
 import client.ScooterServiceClientImpl;
-import io.restassured.builder.RequestSpecBuilder;
-import io.restassured.builder.ResponseSpecBuilder;
-import io.restassured.filter.log.LogDetail;
+import com.github.javafaker.Faker;
+import io.qameta.allure.Step;
 import io.restassured.response.ValidatableResponse;
-import io.restassured.specification.RequestSpecification;
-import io.restassured.specification.ResponseSpecification;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import static org.hamcrest.CoreMatchers.equalTo;
 
 
-public class CourierTest {
-    private static final RequestSpecification REQUEST_SPECIFICATION =
-            new RequestSpecBuilder()
-                    .log(LogDetail.ALL)
-                    .addHeader("Content-type", "application/json")
-                    .setBaseUri("http://qa-scooter.praktikum-services.ru/")
-                    .build();
-    private static final ResponseSpecification RESPONSE_SPECIFICATION =
-            new ResponseSpecBuilder().log(LogDetail.ALL).build();
+public class CourierTest extends BaseTest  {
     private ScooterServiceClient client;
     private String createdCourierId;
 
@@ -37,35 +26,64 @@ public class CourierTest {
         }
     }
 
+    @Step("Create courier successfully")
     @Test
-    public void createCourier_success() {
+    public void createCourierSuccess() {
+        Faker faker = new Faker();
 
-        Courier courier = Courier.create("Dasha", "1234", "Dasha");
+        String username = faker.name().username();
+        String password = faker.internet().password();
+        String fullName = faker.name().fullName();
+
+        Courier courier = Courier.create(username, password, fullName);
         ValidatableResponse response = client.createCourier(courier);
         createdCourierId = response.extract().jsonPath().getString("id");
         response.assertThat().statusCode(201).and().body("ok", equalTo(true));
-
     }
+
+    @Step("Create courier with duplicate login")
     @Test
-    public void createCourier_duplicateLogin_returnsError() {
-        Courier courier = Courier.create("yruifrfr", "1234", "Dasha");
+    public void createCourierDuplicateLoginReturnsError() {
+        Faker faker = new Faker();
+
+        String username = faker.name().username();
+        String password = faker.internet().password();
+        String fullName = faker.name().fullName();
+
+        Courier courier = Courier.create(username, password, fullName);
+        client.createCourier(courier);
+
         ValidatableResponse response = client.createCourier(courier);
         response.assertThat().statusCode(409);
     }
+
+    @Step("Create courier with missing field")
     @Test
-    public void createCourier_missingField_returnsError() {
-        Courier courier = Courier.create("yruifrfr", null, "Dasha");
+    public void createCourierMissingFieldReturnsError() {
+        Faker faker = new Faker();
+
+        String username = faker.name().username();
+        String fullName = faker.name().fullName();
+
+        Courier courier = Courier.create(username, null, fullName);
         ValidatableResponse response = client.createCourier(courier);
         response.assertThat().statusCode(400);
     }
+
+    @Step("Create courier with existing login")
     @Test
-    public void createCourier_existingLogin_returnsError() {
-        Courier existingCourier = Courier.create("existing_login", "password", "Existing");
+    public void createCourierExistingLoginReturnsError() {
+        Faker faker = new Faker();
+
+        String username = faker.name().username();
+        String password = faker.internet().password();
+        String fullName = faker.name().fullName();
+
+        Courier existingCourier = Courier.create(username, password, fullName);
         client.createCourier(existingCourier);
 
-        Courier duplicateCourier = Courier.create("existing_login", "password2", "Duplicate");
+        Courier duplicateCourier = Courier.create(username, "password2", "Duplicate");
         ValidatableResponse response = client.createCourier(duplicateCourier);
         response.assertThat().statusCode(409);
     }
-
 }

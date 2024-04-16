@@ -8,5 +8,5 @@ public interface ScooterServiceClient {
     ValidatableResponse login(Credentials credentials);
     ValidatableResponse deleteCourierById(String id);
     ValidatableResponse createOrder(OrderData orderData);
-    Response getOrders();
+    Response getListOfOrders();
 }
