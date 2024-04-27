@@ -56,7 +56,7 @@ public class ScooterServiceClientImpl implements ScooterServiceClient {
         return given()
                 .spec(requestSpecification)
                 .body(orderData)
-                .post("/api/v1/orders")
+                .post(GET_ORDERS_ENDPOINT)
                 .then()
                 .spec(responseSpecification);
     }
@@ -64,7 +64,7 @@ public class ScooterServiceClientImpl implements ScooterServiceClient {
     public Response getListOfOrders() {
         return RestAssured.given()
                 .spec(requestSpecification)
-                .get("/api/v1/orders")
+                .get(GET_ORDERS_ENDPOINT)
                 .then()
                 .spec(responseSpecification)
                 .extract()
